@@ -594,7 +594,7 @@ class TFModel:
 
             self.yaml_file = Path(cfg).name
             with open(cfg) as f:
-                self.yaml = yaml.load(f, Loader=yaml.FullLoader)  # model dict
+                self.yaml = yaml.load(f, Loader=yaml.SafeLoader)  # model dict
 
         # Define model
         if nc and nc != self.yaml["nc"]:
