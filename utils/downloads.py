@@ -33,7 +33,7 @@ def gsutil_getsize(url=""):
 
 def url_getsize(url="https://ultralytics.com/images/bus.jpg"):
     """Returns the size in bytes of a downloadable file at a given URL; defaults to -1 if not found."""
-    response = requests.head(url, allow_redirects=True)
+    response = requests.head(url, allow_redirects=True, timeout=60)
     return int(response.headers.get("content-length", -1))
 
 
@@ -95,7 +95,7 @@ def attempt_download(file, repo="ultralytics/yolov5", release="v7.0"):
         # Return GitHub repo tag (i.e. 'v7.0') and assets (i.e. ['yolov5s.pt', 'yolov5m.pt', ...])
         if version != "latest":
             version = f"tags/{version}"  # i.e. tags/v7.0
-        response = requests.get(f"https://api.github.com/repos/{repository}/releases/{version}").json()  # github api
+        response = requests.get(f"https://api.github.com/repos/{repository}/releases/{version}", timeout=60).json()  # github api
         return response["tag_name"], [x["name"] for x in response["assets"]]  # tag, assets
 
     file = Path(str(file).strip().replace("'", ""))
