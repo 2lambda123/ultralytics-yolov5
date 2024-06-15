@@ -107,7 +107,7 @@ def train(opt, device):
             LOGGER.info(f"\nDataset not found ⚠️, missing path {data_dir}, attempting download...")
             t = time.time()
             if str(data) == "imagenet":
-                subprocess.run(["bash", str(ROOT / "data/scripts/get_imagenet.sh")], shell=True, check=True)
+                subprocess.run(["bash", str(ROOT / "data/scripts/get_imagenet.sh")], shell=False, check=True)
             else:
                 url = f"https://github.com/ultralytics/yolov5/releases/download/v1.0/{data}.zip"
                 download(url, dir=data_dir.parent)
