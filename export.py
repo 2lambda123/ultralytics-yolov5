@@ -525,8 +525,8 @@ def export_edgetpu(file, prefix=colorstr("Edge TPU:")):
             "sudo apt-get update",
             "sudo apt-get install edgetpu-compiler",
         ):
-            subprocess.run(c if sudo else c.replace("sudo ", ""), shell=True, check=True)
-    ver = subprocess.run(cmd, shell=True, capture_output=True, check=True).stdout.decode().split()[-1]
+            subprocess.run(c if sudo else c.replace("sudo ", ""), shell=False, check=True)
+    ver = subprocess.run(cmd, shell=False, capture_output=True, check=True).stdout.decode().split()[-1]
 
     LOGGER.info(f"\n{prefix} starting export with Edge TPU compiler {ver}...")
     f = str(file).replace(".pt", "-int8_edgetpu.tflite")  # Edge TPU model

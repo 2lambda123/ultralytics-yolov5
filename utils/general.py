@@ -570,7 +570,7 @@ def check_dataset(data, autodownload=True):
                 r = None  # success
             elif s.startswith("bash "):  # bash script
                 LOGGER.info(f"Running {s} ...")
-                r = subprocess.run(s, shell=True)
+                r = subprocess.run(s, shell=False)
             else:  # python script
                 r = exec(s, {"yaml": data})  # return None
             dt = f"({round(time.time() - t, 1)}s)"
