@@ -71,24 +71,58 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # suppress verbose TF compiler warning
 
 
 def is_ascii(s=""):
-    """Checks if input string `s` contains only ASCII characters; returns `True` if so, otherwise `False`."""
+    """    Checks if the input string contains only ASCII characters.
+
+    This function takes an input string `s` and checks if it contains only
+    ASCII characters. It first converts the input to a string and then
+    encodes it to check for ASCII characters.
+
+    Args:
+        s (str): The input string to be checked for ASCII characters. Defaults to an
+            empty string.
+
+    Returns:
+        bool: True if the input string contains only ASCII characters, False
+            otherwise.
+    """
     s = str(s)  # convert list, tuple, None, etc. to str
     return len(s.encode().decode("ascii", "ignore")) == len(s)
 
 
 def is_chinese(s="人工智能"):
-    """Determines if a string `s` contains any Chinese characters; returns `True` if so, otherwise `False`."""
+    """    Determines if a string contains any Chinese characters.
+
+    This function checks if the input string `s` contains any Chinese
+    characters by searching for characters in the Unicode range for Chinese
+    characters. Returns True if Chinese characters are found, otherwise
+    returns False.
+
+    Args:
+        s (str): The input string to check for Chinese characters. Defaults to "人工智能".
+
+    Returns:
+        bool: True if the input string contains Chinese characters, False otherwise.
+    """
     return bool(re.search("[\u4e00-\u9fff]", str(s)))
 
 
 def is_colab():
-    """Checks if the current environment is a Google Colab instance; returns `True` for Colab, otherwise `False`."""
+    """    Checks if the current environment is a Google Colab instance.
+
+    This function checks if the 'google.colab' module is present in the
+    sys.modules dictionary to determine if the current environment is a
+    Google Colab instance.
+
+    Returns:
+        bool: True if the current environment is a Google Colab instance, False
+            otherwise.
+    """
     return "google.colab" in sys.modules
 
 
 def is_jupyter():
-    """
-    Check if the current script is running inside a Jupyter Notebook. Verified on Colab, Jupyterlab, Kaggle, Paperspace.
+    """    Check if the current script is running inside a Jupyter Notebook.
+    Verified on Colab, Jupyterlab, Kaggle, Paperspace.
 
     Returns:
         bool: True if running inside a Jupyter Notebook, False otherwise.
@@ -101,12 +135,26 @@ def is_jupyter():
 
 
 def is_kaggle():
-    """Checks if the current environment is a Kaggle Notebook by validating environment variables."""
+    """    Checks if the current environment is a Kaggle Notebook by validating
+    environment variables.
+
+    Returns:
+        bool: True if the current environment is a Kaggle Notebook, False otherwise.
+    """
     return os.environ.get("PWD") == "/kaggle/working" and os.environ.get("KAGGLE_URL_BASE") == "https://www.kaggle.com"
 
 
 def is_docker() -> bool:
-    """Check if the process runs inside a docker container."""
+    """    Check if the process runs inside a docker container.
+
+    This function checks if the process is running inside a Docker container
+    by looking for specific indicators. It first checks for the existence of
+    the /.dockerenv file and then inspects the control groups in
+    /proc/self/cgroup.
+
+    Returns:
+        bool: True if running inside a Docker container, False otherwise.
+    """
     if Path("/.dockerenv").exists():
         return True
     try:  # check if docker is in control groups
@@ -117,7 +165,17 @@ def is_docker() -> bool:
 
 
 def is_writeable(dir, test=False):
-    """Checks if a directory is writable, optionally testing by creating a temporary file if `test=True`."""
+    """    Checks if a directory is writable, optionally testing by creating a
+    temporary file if `test=True`.
+
+    Args:
+        dir (str): The directory path to be checked.
+        test (bool?): If True, a temporary file will be created to test writability. Default
+            is False.
+
+    Returns:
+        bool: True if the directory is writable, False otherwise.
+    """
     if not test:
         return os.access(dir, os.W_OK)  # possible issues on Windows
     file = Path(dir) / "tmp.txt"
@@ -134,7 +192,15 @@ LOGGING_NAME = "yolov5"
 
 
 def set_logging(name=LOGGING_NAME, verbose=True):
-    """Configures logging with specified verbosity; `name` sets the logger's name, `verbose` controls logging level."""
+    """    Configures logging with specified verbosity.
+
+    This function configures the logging system based on the specified
+    verbosity level.
+
+    Args:
+        name (str?): The name of the logger. Defaults to LOGGING_NAME.
+        verbose (bool?): Controls the logging level. Defaults to True.
+    """
     rank = int(os.getenv("RANK", -1))  # rank in world for Multi-GPU trainings
     level = logging.INFO if verbose and rank in {-1, 0} else logging.ERROR
     logging.config.dictConfig(
@@ -168,8 +234,17 @@ if platform.system() == "Windows":
 
 
 def user_config_dir(dir="Ultralytics", env_var="YOLOV5_CONFIG_DIR"):
-    """Returns user configuration directory path, preferring environment variable `YOLOV5_CONFIG_DIR` if set, else OS-
-    specific.
+    """    Returns the user configuration directory path, preferring the
+    environment variable `YOLOV5_CONFIG_DIR` if set,
+    otherwise using the OS-specific directory.
+
+    Args:
+        dir (str?): The name of the configuration directory. Defaults to "Ultralytics".
+        env_var (str?): The name of the environment variable to check for the directory path.
+            Defaults to "YOLOV5_CONFIG_DIR".
+
+    Returns:
+        Path: The Path object representing the user configuration directory.
     """
     env = os.getenv(env_var)
     if env:
@@ -194,17 +269,34 @@ class Profile(contextlib.ContextDecorator):
         self.cuda = bool(device and str(device).startswith("cuda"))
 
     def __enter__(self):
-        """Initializes timing at the start of a profiling context block for performance measurement."""
+        """        Initializes timing at the start of a profiling context block for
+        performance measurement.
+
+        Returns:
+            object: The current instance for context management.
+        """
         self.start = self.time()
         return self
 
     def __exit__(self, type, value, traceback):
-        """Concludes timing, updating duration for profiling upon exiting a context block."""
+        """        Concludes timing, updating duration for profiling upon exiting a context
+        block.
+
+        Args:
+            type: The type of exception that occurred, if any.
+            value: The exception instance raised, if any.
+            traceback: The traceback object associated with the exception, if any.
+        """
         self.dt = self.time() - self.start  # delta-time
         self.t += self.dt  # accumulate dt
 
     def time(self):
-        """Measures and returns the current time, synchronizing CUDA operations if `cuda` is True."""
+        """        Measures and returns the current time, synchronizing CUDA operations if
+        `cuda` is True.
+
+        Returns:
+            float: Current time.
+        """
         if self.cuda:
             torch.cuda.synchronize(self.device)
         return time.time()
@@ -219,17 +311,39 @@ class Timeout(contextlib.ContextDecorator):
         self.suppress = bool(suppress_timeout_errors)
 
     def _timeout_handler(self, signum, frame):
-        """Raises a TimeoutError with a custom message when a timeout event occurs."""
+        """        Raises a TimeoutError with a custom message when a timeout event occurs.
+        """
         raise TimeoutError(self.timeout_message)
 
     def __enter__(self):
-        """Initializes timeout mechanism on non-Windows platforms, starting a countdown to raise TimeoutError."""
+        """        Initializes timeout mechanism on non-Windows platforms, starting a
+        countdown to raise TimeoutError.
+
+        This method is used as a context manager to set up a timeout mechanism
+        on non-Windows platforms. It sets a signal handler for SIGALRM and
+        starts a countdown to raise a TimeoutError after a specified number of
+        seconds.
+        """
         if platform.system() != "Windows":  # not supported on Windows
             signal.signal(signal.SIGALRM, self._timeout_handler)  # Set handler for SIGALRM
             signal.alarm(self.seconds)  # start countdown for SIGALRM to be raised
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Disables active alarm on non-Windows systems and optionally suppresses TimeoutError if set."""
+        """        Disables active alarm on non-Windows systems and optionally suppresses
+        TimeoutError if set.
+
+        This method is called when exiting a context manager. It disables the
+        active alarm on non-Windows systems and can optionally suppress a
+        TimeoutError if the 'suppress' flag is set.
+
+        Args:
+            exc_type (type): The type of the exception.
+            exc_val (Exception): The exception instance raised.
+            exc_tb (traceback): The traceback associated with the exception.
+
+        Returns:
+            bool or None: True if TimeoutError is suppressed, None otherwise.
+        """
         if platform.system() != "Windows":
             signal.alarm(0)  # Cancel SIGALRM if it's scheduled
             if self.suppress and exc_type is TimeoutError:  # Suppress TimeoutError
@@ -244,21 +358,54 @@ class WorkingDirectory(contextlib.ContextDecorator):
         self.cwd = Path.cwd().resolve()  # current dir
 
     def __enter__(self):
-        """Temporarily changes the working directory within a 'with' statement context."""
+        """        Temporarily changes the working directory within a 'with' statement
+        context.
+
+        This method is used as a context manager to temporarily change the
+        working directory to the specified directory.
+        """
         os.chdir(self.dir)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Restores the original working directory upon exiting a 'with' statement context."""
+        """        Restores the original working directory upon exiting a 'with' statement
+        context.
+
+        Args:
+            exc_type (type): The type of the exception.
+            exc_val (Exception): The exception instance raised.
+            exc_tb (traceback): The traceback object.
+
+
+        Note:
+            This method is a part of the context manager protocol for handling
+            exceptions and cleanup operations.
+        """
         os.chdir(self.cwd)
 
 
 def methods(instance):
-    """Returns list of method names for a class/instance excluding dunder methods."""
+    """    Returns a list of method names for a class or instance, excluding dunder
+    methods.
+
+    Args:
+        instance (object): An instance of a class.
+
+    Returns:
+        list: A list of method names for the given instance.
+    """
     return [f for f in dir(instance) if callable(getattr(instance, f)) and not f.startswith("__")]
 
 
 def print_args(args: Optional[dict] = None, show_file=True, show_func=False):
-    """Logs the arguments of the calling function, with options to include the filename and function name."""
+    """    Logs the arguments of the calling function, with options to include the
+    filename and function name.
+
+    Args:
+        args (Optional[dict]): A dictionary of arguments to be logged. If None, automatically retrieves
+            arguments from the calling function.
+        show_file (bool): Whether to include the filename in the log.
+        show_func (bool): Whether to include the function name in the log.
+    """
     x = inspect.currentframe().f_back  # previous frame
     file, _, func, _, _ = inspect.getframeinfo(x)
     if args is None:  # get args automatically
@@ -273,10 +420,17 @@ def print_args(args: Optional[dict] = None, show_file=True, show_func=False):
 
 
 def init_seeds(seed=0, deterministic=False):
-    """
-    Initializes RNG seeds and sets deterministic options if specified.
+    """    Initializes RNG seeds and sets deterministic options if specified.
 
-    See https://pytorch.org/docs/stable/notes/randomness.html
+    This function initializes the random number generator seeds for Python,
+    NumPy, PyTorch CPU, and PyTorch CUDA. It also sets deterministic options
+    if specified. For more information on randomness in PyTorch, refer to
+    https://pytorch.org/docs/stable/notes/randomness.html.
+
+    Args:
+        seed (int): The seed value to initialize the random number generators. Default is 0.
+        deterministic (bool): A boolean flag indicating whether to set deterministic options. Default
+            is False.
     """
     random.seed(seed)
     np.random.seed(seed)
@@ -292,38 +446,89 @@ def init_seeds(seed=0, deterministic=False):
 
 
 def intersect_dicts(da, db, exclude=()):
-    """Returns intersection of `da` and `db` dicts with matching keys and shapes, excluding `exclude` keys; uses `da`
-    values.
+    """    Returns the intersection of two dictionaries `da` and `db` with matching
+    keys and shapes, excluding specified keys.
+
+    Args:
+        da (dict): The first input dictionary.
+        db (dict): The second input dictionary.
+        exclude (tuple): Keys to be excluded from the intersection (default is an empty tuple).
+
+    Returns:
+        dict: A dictionary containing key-value pairs that are present in both input
+            dictionaries and have matching shapes.
     """
     return {k: v for k, v in da.items() if k in db and all(x not in k for x in exclude) and v.shape == db[k].shape}
 
 
 def get_default_args(func):
-    """Returns a dict of `func` default arguments by inspecting its signature."""
+    """    Returns a dictionary of default arguments for the given function by
+    inspecting its signature.
+
+    Args:
+        func (callable): The function to inspect.
+
+    Returns:
+        dict: A dictionary containing the default arguments of the function.
+    """
     signature = inspect.signature(func)
     return {k: v.default for k, v in signature.parameters.items() if v.default is not inspect.Parameter.empty}
 
 
 def get_latest_run(search_dir="."):
-    """Returns the path to the most recent 'last.pt' file in /runs to resume from, searches in `search_dir`."""
+    """    Returns the path to the most recent 'last.pt' file in /runs to resume
+    from, searches in `search_dir`.
+
+    Args:
+        search_dir (str): The directory path to search for the 'last.pt' file. Defaults to current
+            directory.
+
+    Returns:
+        str: The path to the most recent 'last.pt' file found in the specified
+            directory, or an empty string if not found.
+    """
     last_list = glob.glob(f"{search_dir}/**/last*.pt", recursive=True)
     return max(last_list, key=os.path.getctime) if last_list else ""
 
 
 def file_age(path=__file__):
-    """Calculates and returns the age of a file in days based on its last modification time."""
+    """    Calculates and returns the age of a file in days based on its last
+    modification time.
+
+    Args:
+        path (str?): The path to the file. Defaults to __file__.
+
+    Returns:
+        int: The age of the file in days.
+    """
     dt = datetime.now() - datetime.fromtimestamp(Path(path).stat().st_mtime)  # delta
     return dt.days  # + dt.seconds / 86400  # fractional days
 
 
 def file_date(path=__file__):
-    """Returns a human-readable file modification date in 'YYYY-M-D' format, given a file path."""
+    """    Returns a human-readable file modification date in 'YYYY-M-D' format,
+    given a file path.
+
+    Args:
+        path (str): The path to the file.
+
+    Returns:
+        str: The file modification date in 'YYYY-M-D' format.
+    """
     t = datetime.fromtimestamp(Path(path).stat().st_mtime)
     return f"{t.year}-{t.month}-{t.day}"
 
 
 def file_size(path):
-    """Returns file or directory size in megabytes (MB) for a given path, where directories are recursively summed."""
+    """    Returns file or directory size in megabytes (MB) for a given path, where
+    directories are recursively summed.
+
+    Args:
+        path (str): The path to the file or directory.
+
+    Returns:
+        float: The size of the file or directory in megabytes.
+    """
     mb = 1 << 20  # bytes to MiB (1024 ** 2)
     path = Path(path)
     if path.is_file():
@@ -335,12 +540,27 @@ def file_size(path):
 
 
 def check_online():
-    """Checks internet connectivity by attempting to create a connection to "1.1.1.1" on port 443, retries once if the
+    """    Checks internet connectivity by attempting to create a connection to
+    "1.1.1.1" on port 443, retries once if the
     first attempt fails.
+
+    Returns:
+        bool: True if internet connectivity is available, False otherwise.
     """
     import socket
 
     def run_once():
+        """Check the accessibility of a host by attempting to create a connection
+        once.
+
+        This function attempts to create a connection to a specified host and
+        port. If the connection is successful, it returns True, otherwise it
+        returns False.
+
+        Returns:
+            bool: True if the connection is successful, False otherwise.
+        """
+
         # Check once
         try:
             socket.create_connection(("1.1.1.1", 443), 5)  # check host accessibility
@@ -352,10 +572,19 @@ def check_online():
 
 
 def git_describe(path=ROOT):
-    """
-    Returns a human-readable git description of the repository at `path`, or an empty string on failure.
+    """    Returns a human-readable git description of the repository at the
+    specified `path`, or an empty string on failure.
 
-    Example output is 'fv5.0-5-g3e25f1e'. See https://git-scm.com/docs/git-describe.
+    This function executes a git command to describe the repository at the
+    given path. The output format is typically in the form
+    'fv5.0-5-g3e25f1e'. For more information, refer to: https://git-
+    scm.com/docs/git-describe.
+
+    Args:
+        path (str): The path to the repository.
+
+    Returns:
+        str: A human-readable git description of the repository.
     """
     try:
         assert (Path(path) / ".git").is_dir()
@@ -367,8 +596,13 @@ def git_describe(path=ROOT):
 @TryExcept()
 @WorkingDirectory(ROOT)
 def check_git_status(repo="ultralytics/yolov5", branch="master"):
-    """Checks if YOLOv5 code is up-to-date with the repository, advising 'git pull' if behind; errors return informative
-    messages.
+    """    Checks if the YOLOv5 code is up-to-date with the repository and advises
+    running 'git pull' if behind.
+
+    Args:
+        repo (str): The GitHub repository to check for updates. Default is
+            "ultralytics/yolov5".
+        branch (str): The branch to compare against. Default is "master".
     """
     url = f"https://github.com/{repo}"
     msg = f", for updates see {url}"
@@ -396,7 +630,26 @@ def check_git_status(repo="ultralytics/yolov5", branch="master"):
 
 @WorkingDirectory(ROOT)
 def check_git_info(path="."):
-    """Checks YOLOv5 git info, returning a dict with remote URL, branch name, and commit hash."""
+    """    Checks YOLOv5 git info, returning a dictionary with remote URL, branch
+    name, and commit hash.
+
+    This function checks the git information of the specified path and
+    returns a dictionary containing the remote URL, branch name, and commit
+    hash.
+
+    Args:
+        path (str): The path to the git repository. Defaults to current directory.
+
+    Returns:
+        dict: A dictionary containing the remote URL, branch name, and commit hash.
+            Example:
+            {
+            "remote": str,  # Remote URL of the git repository
+            "branch": str or None,  # Branch name of the git repository or None if
+            in detached HEAD state
+            "commit": str  # Commit hash of the git repository
+            }
+    """
     check_requirements("gitpython")
     import git
 
@@ -414,12 +667,32 @@ def check_git_info(path="."):
 
 
 def check_python(minimum="3.8.0"):
-    """Checks if current Python version meets the minimum required version, exits if not."""
+    """    Checks if the current Python version meets the minimum required version,
+    and exits if it does not.
+
+    Args:
+        minimum (str): The minimum required Python version in the format 'x.y.z'. Defaults to
+            '3.8.0'.
+    """
     check_version(platform.python_version(), minimum, name="Python ", hard=True)
 
 
 def check_version(current="0.0.0", minimum="0.0.0", name="version ", pinned=False, hard=False, verbose=False):
-    """Checks if the current version meets the minimum required version, exits or warns based on parameters."""
+    """    Checks if the current version meets the minimum required version, exits
+    or warns based on parameters.
+
+    Args:
+        current (str): The current version to be checked.
+        minimum (str): The minimum required version.
+        name (str): Name of the version being checked.
+        pinned (bool): If True, the current version must match the minimum exactly.
+        hard (bool): If True, raise an AssertionError if requirements are not met.
+        verbose (bool): If True, display a warning message if requirements are not met.
+
+    Returns:
+        bool: True if the current version meets the minimum requirements, False
+            otherwise.
+    """
     current, minimum = (pkg.parse_version(x) for x in (current, minimum))
     result = (current == minimum) if pinned else (current >= minimum)  # bool
     s = f"WARNING ⚠️ {name}{minimum} is required by YOLOv5, but {name}{current} is currently installed"  # string
@@ -431,7 +704,25 @@ def check_version(current="0.0.0", minimum="0.0.0", name="version ", pinned=Fals
 
 
 def check_img_size(imgsz, s=32, floor=0):
-    """Adjusts image size to be divisible by stride `s`, supports int or list/tuple input, returns adjusted size."""
+    """    Adjusts the image size to be divisible by the specified stride `s`.
+
+    This function supports both integer and list/tuple input for image size
+    and returns the adjusted size.
+
+    Args:
+        imgsz (int or list/tuple): The input image size. It can be either an integer or a list/tuple of
+            integers.
+        s (int): The stride value to make the image size divisible by. Default is 32.
+        floor (int): The minimum value that the adjusted size can be. Default is 0.
+
+    Returns:
+        int or list: The adjusted image size after making it divisible by the
+            specified stride.
+            
+            Warnings:
+        If the input image size is not divisible by the specified stride, a
+            warning message is logged.
+    """
     if isinstance(imgsz, int):  # integer i.e. img_size=640
         new_size = max(make_divisible(imgsz, int(s)), floor)
     else:  # list i.e. img_size=[640, 480]
@@ -443,7 +734,20 @@ def check_img_size(imgsz, s=32, floor=0):
 
 
 def check_imshow(warn=False):
-    """Checks environment support for image display; warns on failure if `warn=True`."""
+    """    Checks environment support for image display; warns on failure if
+    `warn=True`.
+
+    This function checks if the current environment supports image display
+    by trying to display a test image using OpenCV. If `warn` is set to True
+    and an exception is raised during the check, a warning message is
+    logged.
+
+    Args:
+        warn (bool?): If True, a warning message is logged on failure. Defaults to False.
+
+    Returns:
+        bool: True if image display is supported, False otherwise.
+    """
     try:
         assert not is_jupyter()
         assert not is_docker()
@@ -459,7 +763,14 @@ def check_imshow(warn=False):
 
 
 def check_suffix(file="yolov5s.pt", suffix=(".pt",), msg=""):
-    """Validates if a file or files have an acceptable suffix, raising an error if not."""
+    """    Validates if a file or files have an acceptable suffix, raising an error
+    if not.
+
+    Args:
+        file (str or list): The file name or a list of file names to be checked.
+        suffix (str or tuple): The acceptable suffix or tuple of acceptable suffixes.
+        msg (str): Additional message to be displayed in the error message.
+    """
     if file and suffix:
         if isinstance(suffix, str):
             suffix = [suffix]
@@ -470,12 +781,30 @@ def check_suffix(file="yolov5s.pt", suffix=(".pt",), msg=""):
 
 
 def check_yaml(file, suffix=(".yaml", ".yml")):
-    """Searches/downloads a YAML file, verifies its suffix (.yaml or .yml), and returns the file path."""
+    """    Searches and verifies the suffix of a YAML file and returns the file
+    path.
+
+    Args:
+        file (str): The path to the YAML file.
+        suffix (tuple?): Suffixes to check for. Defaults to (".yaml", ".yml").
+
+    Returns:
+        str: The path to the validated YAML file.
+    """
     return check_file(file, suffix)
 
 
 def check_file(file, suffix=""):
-    """Searches/downloads a file, checks its suffix (if provided), and returns the file path."""
+    """    Searches/downloads a file, checks its suffix (if provided), and returns
+    the file path.
+
+    Args:
+        file (str): The file path or URL to be checked/downloaded.
+        suffix (str?): The expected suffix of the file. Defaults to "".
+
+    Returns:
+        str: The validated file path.
+    """
     check_suffix(file, suffix)  # optional
     file = str(file)  # convert to str()
     if os.path.isfile(file) or not file:  # exists
@@ -505,7 +834,13 @@ def check_file(file, suffix=""):
 
 
 def check_font(font=FONT, progress=False):
-    """Ensures specified font exists or downloads it from Ultralytics assets, optionally displaying progress."""
+    """    Ensures the specified font exists or downloads it from Ultralytics
+    assets, optionally displaying progress.
+
+    Args:
+        font (str?): The name of the font to check or download. Defaults to FONT.
+        progress (bool?): Whether to display download progress. Defaults to False.
+    """
     font = Path(font)
     file = CONFIG_DIR / font.name
     if not font.exists() and not file.exists():
@@ -515,7 +850,9 @@ def check_font(font=FONT, progress=False):
 
 
 def check_dataset(data, autodownload=True):
-    """Validates and/or auto-downloads a dataset, returning its configuration as a dictionary."""
+    """    Validates and/or auto-downloads a dataset, returning its configuration
+    as a dictionary.
+    """
 
     # Download (optional)
     extract_dir = ""
@@ -581,10 +918,39 @@ def check_dataset(data, autodownload=True):
 
 
 def check_amp(model):
-    """Checks PyTorch AMP functionality for a model, returns True if AMP operates correctly, otherwise False."""
+    """    Checks PyTorch AMP functionality for a model, returns True if AMP
+    operates correctly, otherwise False.
+
+    This function checks the Automatic Mixed Precision (AMP) functionality
+    for a PyTorch model. It compares the results of floating-point 32 (FP32)
+    inference and AMP inference to ensure they are close within a 10%
+    absolute tolerance.
+
+    Args:
+        model: PyTorch model to check AMP functionality for.
+
+    Returns:
+        bool: True if AMP operates correctly, False otherwise.
+    """
     from models.common import AutoShape, DetectMultiBackend
 
     def amp_allclose(model, im):
+        """Check if the results of FP32 and AMP inferences are all close within a
+        certain absolute tolerance.
+
+        This function takes a model and an input image, performs FP32 and AMP
+        inferences using the model, and then checks if the results are all close
+        within a specified absolute tolerance.
+
+        Args:
+            model: AutoShape object representing the model.
+            im: Input image for inference.
+
+        Returns:
+            bool: True if the results of FP32 and AMP inferences are all close within the
+                specified tolerance, False otherwise.
+        """
+
         # All close FP32 vs AMP results
         m = AutoShape(model, verbose=False)  # model
         a = m(im).xywhn[0]  # FP32 inference
@@ -609,22 +975,45 @@ def check_amp(model):
 
 
 def yaml_load(file="data.yaml"):
-    """Safely loads and returns the contents of a YAML file specified by `file` argument."""
+    """    Safely loads and returns the contents of a YAML file.
+
+    This function opens the specified YAML file and safely loads its
+    contents using yaml.safe_load.
+
+    Args:
+        file (str): The path to the YAML file to be loaded. Defaults to "data.yaml".
+
+    Returns:
+        dict: The contents of the YAML file as a dictionary.
+    """
     with open(file, errors="ignore") as f:
         return yaml.safe_load(f)
 
 
 def yaml_save(file="data.yaml", data={}):
-    """Safely saves `data` to a YAML file specified by `file`, converting `Path` objects to strings; `data` is a
-    dictionary.
+    """    Safely saves `data` to a YAML file specified by `file`, converting
+    `Path` objects to strings; `data` is a dictionary.
+
+    Args:
+        file (str?): The file path where the data will be saved in YAML format. Defaults to
+            "data.yaml".
+        data (dict?): The data to be saved in the YAML file. Defaults to an empty dictionary.
     """
     with open(file, "w") as f:
         yaml.safe_dump({k: str(v) if isinstance(v, Path) else v for k, v in data.items()}, f, sort_keys=False)
 
 
 def unzip_file(file, path=None, exclude=(".DS_Store", "__MACOSX")):
-    """Unzips `file` to `path` (default: file's parent), excluding filenames containing any in `exclude` (`.DS_Store`,
-    `__MACOSX`).
+    """    Unzips the specified `file` to the given `path`, excluding filenames
+    containing any of the strings in `exclude`.
+
+    Args:
+        file (str): The path to the zip file to be extracted.
+        path (str?): The directory where the contents of the zip file will be extracted.
+            Defaults to None.
+        exclude (tuple?): A tuple of strings. Files containing any of these strings will be
+            excluded from extraction.
+            Defaults to (".DS_Store", "__MACOSX").
     """
     if path is None:
         path = Path(file).parent  # default path
@@ -635,19 +1024,55 @@ def unzip_file(file, path=None, exclude=(".DS_Store", "__MACOSX")):
 
 
 def url2file(url):
-    """
-    Converts a URL string to a valid filename by stripping protocol, domain, and any query parameters.
+    """    Converts a URL string to a valid filename by stripping protocol, domain,
+    and any query parameters.
 
-    Example https://url.com/file.txt?auth -> file.txt
+    This function takes a URL string as input and processes it to extract
+    the filename from the URL.
+
+    Args:
+        url (str): A string representing the URL from which the filename needs to be
+            extracted.
+
+    Returns:
+        str: The extracted filename from the URL.
+
+    Note:
+        The function uses Pathlib to handle the URL string and urllib.parse to
+        unquote the URL.
+
+    Examples:
+        If the input URL is 'https://url.com/file.txt?auth', the function will
+        return 'file.txt'.
     """
     url = str(Path(url)).replace(":/", "://")  # Pathlib turns :// -> :/
     return Path(urllib.parse.unquote(url)).name.split("?")[0]  # '%2F' to '/', split https://url.com/file.txt?auth
 
 
 def download(url, dir=".", unzip=True, delete=True, curl=False, threads=1, retry=3):
-    """Downloads and optionally unzips files concurrently, supporting retries and curl fallback."""
+    """    Downloads and optionally unzips files concurrently, supporting retries
+    and curl fallback.
+
+    Args:
+        url (str or list): The URL(s) of the file(s) to download.
+        dir (str): The directory where the file(s) will be saved. Defaults to current
+            directory.
+        unzip (bool): Whether to unzip the downloaded file(s). Defaults to True.
+        delete (bool): Whether to delete the downloaded zip file after unzipping. Defaults to
+            True.
+        curl (bool): Whether to use curl for downloading. Defaults to False.
+        threads (int): Number of threads to use for downloading concurrently. Defaults to 1.
+        retry (int): Number of times to retry downloading in case of failure. Defaults to 3.
+    """
 
     def download_one(url, dir):
+        """Download a file from a URL to a specified directory.
+
+        Args:
+            url (str): The URL of the file to download.
+            dir (str): The directory where the file will be saved.
+        """
+
         # Download 1 file
         success = True
         if os.path.isfile(url):
@@ -692,33 +1117,72 @@ def download(url, dir=".", unzip=True, delete=True, curl=False, threads=1, retry
 
 
 def make_divisible(x, divisor):
-    """Adjusts `x` to be divisible by `divisor`, returning the nearest greater or equal value."""
+    """    Adjusts `x` to be divisible by `divisor`, returning the nearest greater
+    or equal value.
+
+    Args:
+        x (int): The number to be adjusted.
+        divisor (int or torch.Tensor): The number to divide `x` by for adjustment.
+
+    Returns:
+        int: The adjusted value of `x` that is divisible by `divisor.
+    """
     if isinstance(divisor, torch.Tensor):
         divisor = int(divisor.max())  # to int
     return math.ceil(x / divisor) * divisor
 
 
 def clean_str(s):
-    """Cleans a string by replacing special characters with underscore, e.g., `clean_str('#example!')` returns
-    '_example_'.
+    """    Cleans a string by replacing special characters with underscore, e.g.,
+    `clean_str('#example!')` returns '_example_'.
+
+    Args:
+        s (str): The input string to be cleaned.
+
+    Returns:
+        str: The cleaned string with special characters replaced by underscores.
     """
     return re.sub(pattern="[|@#!¡·$€%&()=?¿^*;:,¨´><+]", repl="_", string=s)
 
 
 def one_cycle(y1=0.0, y2=1.0, steps=100):
-    """
-    Generates a lambda for a sinusoidal ramp from y1 to y2 over 'steps'.
+    """    Generates a lambda function for a sinusoidal ramp from y1 to y2 over
+    'steps'.
 
-    See https://arxiv.org/pdf/1812.01187.pdf for details.
+    This function generates a lambda function that represents a sinusoidal
+    ramp from y1 to y2 over the specified number of steps. The formula used
+    is ((1 - math.cos(x * math.pi / steps)) / 2) * (y2 - y1) + y1.
+
+    Args:
+        y1 (float): The starting value of the ramp.
+        y2 (float): The ending value of the ramp.
+        steps (int): The number of steps in the ramp.
+
+    Returns:
+        function: A lambda function representing the sinusoidal ramp.
+
+    Note:
+        See https://arxiv.org/pdf/1812.01187.pdf for more details.
     """
     return lambda x: ((1 - math.cos(x * math.pi / steps)) / 2) * (y2 - y1) + y1
 
 
 def colorstr(*input):
-    """
-    Colors a string using ANSI escape codes, e.g., colorstr('blue', 'hello world').
+    """    Colors a string using ANSI escape codes.
 
-    See https://en.wikipedia.org/wiki/ANSI_escape_code.
+    This function takes color arguments and a string to colorize using ANSI
+    escape codes. Available colors are: black, red, green, yellow, blue,
+    magenta, cyan, white, bright_black, bright_red, bright_green,
+    bright_yellow, bright_blue, bright_magenta, bright_cyan, bright_white,
+    end, bold, underline.
+
+    Args:
+        *input (tuple): A tuple containing color arguments followed by the string to colorize.
+
+    Returns:
+        str: The colored string.
+            Reference:
+        https: //en.wikipedia.org/wiki/ANSI_escape_code
     """
     *args, string = input if len(input) > 1 else ("blue", "bold", input[0])  # color arguments, string
     colors = {
@@ -746,7 +1210,16 @@ def colorstr(*input):
 
 
 def labels_to_class_weights(labels, nc=80):
-    """Calculates class weights from labels to handle class imbalance in training; input shape: (n, 5)."""
+    """    Calculates class weights from labels to handle class imbalance in
+    training; input shape: (n, 5).
+
+    Args:
+        labels (list): A list of numpy arrays containing labels in the format [class xywh].
+        nc (int): Number of classes. Default is 80 for COCO dataset.
+
+    Returns:
+        torch.Tensor: A tensor containing the calculated class weights.
+    """
     if labels[0] is None:  # no labels loaded
         return torch.Tensor()
 
@@ -765,17 +1238,34 @@ def labels_to_class_weights(labels, nc=80):
 
 
 def labels_to_image_weights(labels, nc=80, class_weights=np.ones(80)):
-    """Calculates image weights from labels using class weights for weighted sampling."""
+    """    Calculates image weights from labels using class weights for weighted
+    sampling.
+
+    This function takes a list of labels and calculates image weights based
+    on class weights for weighted sampling.
+
+    Args:
+        labels (list): A list of labels.
+        nc (int): Number of classes. Default is 80.
+        class_weights (numpy.ndarray): Array of class weights. Default is an array of ones with length 80.
+
+    Returns:
+        numpy.ndarray: Image weights calculated based on the labels and class weights.
+    """
     # Usage: index = random.choices(range(n), weights=image_weights, k=1)  # weighted image sample
     class_counts = np.array([np.bincount(x[:, 0].astype(int), minlength=nc) for x in labels])
     return (class_weights.reshape(1, nc) * class_counts).sum(1)
 
 
 def coco80_to_coco91_class():
-    """
-    Converts COCO 80-class index to COCO 91-class index used in the paper.
+    """    Converts COCO 80-class index to COCO 91-class index used in the paper.
 
-    Reference: https://tech.amikelive.com/node-718/what-object-categories-labels-are-in-coco-dataset/
+    This function converts the COCO 80-class index to the COCO 91-class
+    index as referenced in the provided link.
+
+    Returns:
+        list: A list of integers representing the conversion from COCO 80-class index
+            to COCO 91-class index.
     """
     # a = np.loadtxt('data/coco.names', dtype='str', delimiter='\n')
     # b = np.loadtxt('data/coco_paper.names', dtype='str', delimiter='\n')
@@ -866,7 +1356,17 @@ def coco80_to_coco91_class():
 
 
 def xyxy2xywh(x):
-    """Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h] where xy1=top-left, xy2=bottom-right."""
+    """    Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h] where xy1=top-
+    left, xy2=bottom-right.
+
+    Args:
+        x (torch.Tensor or numpy.ndarray): Input array of shape (n, 4) representing bounding boxes in [x1, y1, x2,
+            y2] format.
+
+    Returns:
+        torch.Tensor or numpy.ndarray: Output array of shape (n, 4) representing
+            bounding boxes in [x, y, w, h] format.
+    """
     y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
     y[..., 0] = (x[..., 0] + x[..., 2]) / 2  # x center
     y[..., 1] = (x[..., 1] + x[..., 3]) / 2  # y center
@@ -876,7 +1376,16 @@ def xyxy2xywh(x):
 
 
 def xywh2xyxy(x):
-    """Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right."""
+    """    Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2] where xy1=top-
+    left, xy2=bottom-right.
+
+    Args:
+        x (torch.Tensor or numpy.ndarray): Input boxes in [x, y, w, h] format.
+
+    Returns:
+        torch.Tensor or numpy.ndarray: Converted boxes in [x1, y1, x2, y2]
+            format.
+    """
     y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
     y[..., 0] = x[..., 0] - x[..., 2] / 2  # top left x
     y[..., 1] = x[..., 1] - x[..., 3] / 2  # top left y
@@ -886,7 +1395,20 @@ def xywh2xyxy(x):
 
 
 def xywhn2xyxy(x, w=640, h=640, padw=0, padh=0):
-    """Convert nx4 boxes from [x, y, w, h] normalized to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right."""
+    """    Convert nx4 boxes from [x, y, w, h] normalized to [x1, y1, x2, y2] where
+    xy1=top-left, xy2=bottom-right.
+
+    Args:
+        x (torch.Tensor or numpy.ndarray): Input array of shape (n, 4) representing [x, y, w, h] normalized boxes.
+        w (int): Width of the image.
+        h (int): Height of the image.
+        padw (int): Padding width.
+        padh (int): Padding height.
+
+    Returns:
+        torch.Tensor or numpy.ndarray: Output array of shape (n, 4) representing
+            [x1, y1, x2, y2] boxes.
+    """
     y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
     y[..., 0] = w * (x[..., 0] - x[..., 2] / 2) + padw  # top left x
     y[..., 1] = h * (x[..., 1] - x[..., 3] / 2) + padh  # top left y
@@ -896,7 +1418,23 @@ def xywhn2xyxy(x, w=640, h=640, padw=0, padh=0):
 
 
 def xyxy2xywhn(x, w=640, h=640, clip=False, eps=0.0):
-    """Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h] normalized where xy1=top-left, xy2=bottom-right."""
+    """    Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h] normalized where
+    xy1=top-left, xy2=bottom-right.
+
+    Args:
+        x (torch.Tensor or numpy.ndarray): Input boxes in [x1, y1, x2, y2] format.
+        w (int): Width of the image. Default is 640.
+        h (int): Height of the image. Default is 640.
+        clip (bool): Whether to clip the boxes within image boundaries. Default is False.
+        eps (float): Epsilon value for clipping. Default is 0.0.
+
+    Returns:
+        torch.Tensor or numpy.ndarray: Converted boxes in [x, y, w, h] format.
+
+    Note:
+        If clip is True, the input boxes will be clipped to stay within the
+        image boundaries.
+    """
     if clip:
         clip_boxes(x, (h - eps, w - eps))  # warning: inplace clip
     y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
@@ -908,7 +1446,22 @@ def xyxy2xywhn(x, w=640, h=640, clip=False, eps=0.0):
 
 
 def xyn2xy(x, w=640, h=640, padw=0, padh=0):
-    """Convert normalized segments into pixel segments, shape (n,2)."""
+    """    Convert normalized segments into pixel segments, shape (n,2).
+
+    This function takes normalized segments and converts them into pixel
+    segments by scaling with the provided width and height.
+
+    Args:
+        x (torch.Tensor or numpy.ndarray): Input normalized segments.
+        w (int): Width of the image (default is 640).
+        h (int): Height of the image (default is 640).
+        padw (int): Padding width (default is 0).
+        padh (int): Padding height (default is 0).
+
+    Returns:
+        torch.Tensor or numpy.ndarray: Pixel segments corresponding to the input
+            normalized segments.
+    """
     y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
     y[..., 0] = w * x[..., 0] + padw  # top left x
     y[..., 1] = h * x[..., 1] + padh  # top left y
@@ -916,7 +1469,21 @@ def xyn2xy(x, w=640, h=640, padw=0, padh=0):
 
 
 def segment2box(segment, width=640, height=640):
-    """Convert 1 segment label to 1 box label, applying inside-image constraint, i.e. (xy1, xy2, ...) to (xyxy)."""
+    """    Convert a single segment label to a bounding box label, ensuring the box
+    is within the image boundaries.
+
+    This function takes a segment label and converts it to a bounding box
+    label by transforming the (xy1, xy2, ...) format to (xyxy).
+
+    Args:
+        segment (numpy.ndarray): The segment label in (xy1, xy2, ...) format.
+        width (int): The width of the image. Default is 640.
+        height (int): The height of the image. Default is 640.
+
+    Returns:
+        numpy.ndarray: A 1x4 array representing the bounding box in (x_min, y_min, x_max,
+            y_max) format.
+    """
     x, y = segment.T  # segment xy
     inside = (x >= 0) & (y >= 0) & (x <= width) & (y <= height)
     (
@@ -927,7 +1494,19 @@ def segment2box(segment, width=640, height=640):
 
 
 def segments2boxes(segments):
-    """Convert segment labels to box labels, i.e. (cls, xy1, xy2, ...) to (cls, xywh)."""
+    """    Convert segment labels to box labels, i.e. (cls, xy1, xy2, ...) to (cls,
+    xywh).
+
+    This function takes a list of segment labels and converts them to box
+    labels by extracting the minimum and maximum coordinates of each
+    segment.
+
+    Args:
+        segments (list): A list of segment labels where each label contains coordinates.
+
+    Returns:
+        numpy.ndarray: An array of box labels in the format (cls, xywh).
+    """
     boxes = []
     for s in segments:
         x, y = s.T  # segment xy
@@ -936,7 +1515,16 @@ def segments2boxes(segments):
 
 
 def resample_segments(segments, n=1000):
-    """Resamples an (n,2) segment to a fixed number of points for consistent representation."""
+    """    Resamples an (n,2) segment to a fixed number of points for consistent
+    representation.
+
+    Args:
+        segments (numpy.ndarray): An array of shape (n, 2) representing segments.
+        n (int?): Number of points for resampling. Default is 1000.
+
+    Returns:
+        numpy.ndarray: Resampled segments with shape (n, 2).
+    """
     for i, s in enumerate(segments):
         s = np.concatenate((s, s[0:1, :]), axis=0)
         x = np.linspace(0, len(s) - 1, n)
@@ -946,7 +1534,18 @@ def resample_segments(segments, n=1000):
 
 
 def scale_boxes(img1_shape, boxes, img0_shape, ratio_pad=None):
-    """Rescales (xyxy) bounding boxes from img1_shape to img0_shape, optionally using provided `ratio_pad`."""
+    """    Rescales (xyxy) bounding boxes from img1_shape to img0_shape, optionally
+    using provided `ratio_pad`.
+
+    Args:
+        img1_shape (tuple): Shape of the original image (height, width).
+        boxes (numpy array): Bounding boxes in the format (x1, y1, x2, y2).
+        img0_shape (tuple): Shape of the target image (height, width).
+        ratio_pad (tuple?): Tuple containing gain and padding values. Defaults to None.
+
+    Returns:
+        numpy array: Rescaled bounding boxes.
+    """
     if ratio_pad is None:  # calculate from img0_shape
         gain = min(img1_shape[0] / img0_shape[0], img1_shape[1] / img0_shape[1])  # gain  = old / new
         pad = (img1_shape[1] - img0_shape[1] * gain) / 2, (img1_shape[0] - img0_shape[0] * gain) / 2  # wh padding
@@ -962,7 +1561,19 @@ def scale_boxes(img1_shape, boxes, img0_shape, ratio_pad=None):
 
 
 def scale_segments(img1_shape, segments, img0_shape, ratio_pad=None, normalize=False):
-    """Rescales segment coordinates from img1_shape to img0_shape, optionally normalizing them with custom padding."""
+    """    Rescales segment coordinates from img1_shape to img0_shape, optionally
+    normalizing them with custom padding.
+
+    Args:
+        img1_shape (tuple): Shape of the original image (height, width).
+        segments (ndarray): Array of segment coordinates to be rescaled.
+        img0_shape (tuple): Shape of the target image (height, width).
+        ratio_pad (tuple?): Custom padding ratio and padding values. Defaults to None.
+        normalize (bool?): Flag to normalize the segments. Defaults to False.
+
+    Returns:
+        ndarray: Rescaled segment coordinates.
+    """
     if ratio_pad is None:  # calculate from img0_shape
         gain = min(img1_shape[0] / img0_shape[0], img1_shape[1] / img0_shape[1])  # gain  = old / new
         pad = (img1_shape[1] - img0_shape[1] * gain) / 2, (img1_shape[0] - img0_shape[0] * gain) / 2  # wh padding
@@ -981,7 +1592,13 @@ def scale_segments(img1_shape, segments, img0_shape, ratio_pad=None, normalize=F
 
 
 def clip_boxes(boxes, shape):
-    """Clips bounding box coordinates (xyxy) to fit within the specified image shape (height, width)."""
+    """    Clips bounding box coordinates (xyxy) to fit within the specified image
+    shape (height, width).
+
+    Args:
+        boxes (torch.Tensor or np.array): Bounding box coordinates in the format (x1, y1, x2, y2).
+        shape (tuple): A tuple containing the height and width of the image.
+    """
     if isinstance(boxes, torch.Tensor):  # faster individually
         boxes[..., 0].clamp_(0, shape[1])  # x1
         boxes[..., 1].clamp_(0, shape[0])  # y1
@@ -993,7 +1610,20 @@ def clip_boxes(boxes, shape):
 
 
 def clip_segments(segments, shape):
-    """Clips segment coordinates (xy1, xy2, ...) to an image's boundaries given its shape (height, width)."""
+    """    Clips segment coordinates (xy1, xy2, ...) to an image's boundaries given
+    its shape (height, width).
+
+    Args:
+        segments (torch.Tensor or numpy.ndarray): A tensor or array containing segment coordinates.
+        shape (tuple): A tuple representing the shape of the image (height, width).
+
+
+    Note:
+        If segments is a torch.Tensor, the clipping is done in place for faster
+        processing.
+        - If segments is a numpy.ndarray, the clipping is done element-wise for
+        faster processing.
+    """
     if isinstance(segments, torch.Tensor):  # faster individually
         segments[:, 0].clamp_(0, shape[1])  # x
         segments[:, 1].clamp_(0, shape[0])  # y
@@ -1013,11 +1643,23 @@ def non_max_suppression(
     max_det=300,
     nm=0,  # number of masks
 ):
-    """
-    Non-Maximum Suppression (NMS) on inference results to reject overlapping detections.
+    """    Non-Maximum Suppression (NMS) on inference results to reject overlapping
+    detections.
+
+    Args:
+        prediction (torch.Tensor): The prediction tensor containing inference results.
+        conf_thres (float): Confidence threshold for filtering detections. Default is 0.25.
+        iou_thres (float): IoU (Intersection over Union) threshold for NMS. Default is 0.45.
+        classes (list): List of classes to consider. Default is None.
+        agnostic (bool): Whether to use agnostic NMS. Default is False.
+        multi_label (bool): Whether to allow multiple labels per box. Default is False.
+        labels (tuple): Tuple of labels for autolabelling. Default is ().
+        max_det (int): Maximum number of detections. Default is 300.
+        nm (int): Number of masks. Default is 0.
 
     Returns:
-         list of detections, on (n,6) tensor per image [xyxy, conf, cls]
+        list: List of detections, represented as a (n,6) tensor per image [xyxy, conf,
+            cls].
     """
 
     # Checks
@@ -1117,11 +1759,18 @@ def non_max_suppression(
 
 
 def strip_optimizer(f="best.pt", s=""):
-    """
-    Strips optimizer and optionally saves checkpoint to finalize training; arguments are file path 'f' and save path
-    's'.
+    """    Strips optimizer and optionally saves checkpoint to finalize training.
 
-    Example: from utils.general import *; strip_optimizer()
+    This function loads a checkpoint file specified by 'f', removes
+    optimizer related information, sets epoch to -1, converts the model to
+    half precision (FP16), freezes model parameters, and saves the modified
+    checkpoint to the specified save path 's' or overwrites the original
+    file.
+
+    Args:
+        f (str): File path of the checkpoint to be stripped of optimizer information.
+        s (str): Optional. File path to save the stripped checkpoint. If not provided,
+            overwrites the original file.
     """
     x = torch.load(f, map_location=torch.device("cpu"))
     if x.get("ema"):
@@ -1138,7 +1787,17 @@ def strip_optimizer(f="best.pt", s=""):
 
 
 def print_mutation(keys, results, hyp, save_dir, bucket, prefix=colorstr("evolve: ")):
-    """Logs evolution results and saves to CSV and YAML in `save_dir`, optionally syncs with `bucket`."""
+    """    Logs evolution results and saves to CSV and YAML in `save_dir`,
+    optionally syncs with `bucket`.
+
+    Args:
+        keys (tuple): A tuple of keys for results and hyperparameters.
+        results (tuple): A tuple of numeric results.
+        hyp (dict): A dictionary of hyperparameters.
+        save_dir (pathlib.Path): The directory to save the CSV and YAML files.
+        bucket (str): The name of the bucket to sync with.
+        prefix (str): A prefix string for logging.
+    """
     evolve_csv = save_dir / "evolve.csv"
     evolve_yaml = save_dir / "hyp_evolve.yaml"
     keys = tuple(keys) + tuple(hyp.keys())  # [results + hyps]
@@ -1193,7 +1852,21 @@ def print_mutation(keys, results, hyp, save_dir, bucket, prefix=colorstr("evolve
 
 
 def apply_classifier(x, model, img, im0):
-    """Applies second-stage classifier to YOLO outputs, filtering detections by class match."""
+    """    Applies second-stage classifier to YOLO outputs, filtering detections by
+    class match.
+
+    This function applies a second-stage classifier to the YOLO outputs,
+    filtering the detections based on class match.
+
+    Args:
+        x (list): List of YOLO outputs.
+        model: The classifier model to be applied.
+        img: Image data.
+        im0: Original image data.
+
+    Returns:
+        list: Filtered YOLO outputs based on class match.
+    """
     # Example model = torchvision.models.__dict__['efficientnet_b0'](pretrained=True).to(device).eval()
     im0 = [im0] if isinstance(im0, np.ndarray) else im0
     for i, d in enumerate(x):  # per image
@@ -1228,11 +1901,33 @@ def apply_classifier(x, model, img, im0):
 
 
 def increment_path(path, exist_ok=False, sep="", mkdir=False):
-    """
-    Generates an incremented file or directory path if it exists, with optional mkdir; args: path, exist_ok=False,
-    sep="", mkdir=False.
+    """    Generates an incremented file or directory path if it exists, with
+    optional mkdir.
 
-    Example: runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc
+    Args:
+        path (str): The original file or directory path.
+        exist_ok (bool): Flag indicating whether to allow overwriting existing path (default is
+            False).
+        sep (str): Separator to be used for incrementing the path (default is an empty
+            string).
+        mkdir (bool): Flag indicating whether to create the directory if it does not exist
+            (default is False).
+
+    Returns:
+        Path: The incremented file or directory path.
+
+    Note:
+        The function increments the path by adding a number after the specified
+        separator.
+        If the path already exists and exist_ok is False, it finds the next
+        available incremented path.
+        If mkdir is True, it creates the directory structure if it does not
+        exist.
+
+    Examples:
+        Running increment_path("runs/exp", exist_ok=False, sep="", mkdir=False)
+        will generate paths like:
+        "runs/exp", "runs/exp_2", "runs/exp_3", and so on.
     """
     path = Path(path)  # os-agnostic
     if path.exists() and not exist_ok:
@@ -1263,14 +1958,30 @@ imshow_ = cv2.imshow  # copy to avoid recursion errors
 
 
 def imread(filename, flags=cv2.IMREAD_COLOR):
-    """Reads an image from a file and returns it as a numpy array, using OpenCV's imdecode to support multilanguage
-    paths.
+    """    Reads an image from a file and returns it as a numpy array, using
+    OpenCV's imdecode to support multilanguage paths.
+
+    Args:
+        filename (str): The path to the image file.
+        flags (int): Flag that specifies the way in which the image should be read. Default
+            is cv2.IMREAD_COLOR.
+
+    Returns:
+        numpy.ndarray: The image data as a numpy array.
     """
     return cv2.imdecode(np.fromfile(filename, np.uint8), flags)
 
 
 def imwrite(filename, img):
-    """Writes an image to a file, returns True on success and False on failure, supports multilanguage paths."""
+    """    Writes an image to a file, supports multilanguage paths.
+
+    Args:
+        filename (str): The path to the file where the image will be written.
+        img (numpy.ndarray): The image data to be written to the file.
+
+    Returns:
+        bool: True if the image was successfully written, False otherwise.
+    """
     try:
         cv2.imencode(Path(filename).suffix, img)[1].tofile(filename)
         return True
@@ -1279,7 +1990,13 @@ def imwrite(filename, img):
 
 
 def imshow(path, im):
-    """Displays an image using Unicode path, requires encoded path and image matrix as input."""
+    """    Displays an image using Unicode path, requires encoded path and image
+    matrix as input.
+
+    Args:
+        path (str): A Unicode path to the image.
+        im (numpy.ndarray): A matrix representing the image.
+    """
     imshow_(path.encode("unicode_escape").decode(), im)
 
 
