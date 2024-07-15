@@ -11,7 +11,18 @@ import torch
 
 
 def is_url(url, check=True):
-    """Determines if a string is a URL and optionally checks its existence online, returning a boolean."""
+    """    Determines if a string is a URL and optionally checks its existence
+    online, returning a boolean.
+
+    Args:
+        url (str): The input string to be checked as a URL.
+        check (bool?): Flag to indicate whether to check the existence of the URL online.
+            Defaults to True.
+
+    Returns:
+        bool: True if the input is a valid URL and, if specified, exists online; False
+            otherwise.
+    """
     try:
         url = str(url)
         result = urllib.parse.urlparse(url)
@@ -22,23 +33,50 @@ def is_url(url, check=True):
 
 
 def gsutil_getsize(url=""):
-    """
-    Returns the size in bytes of a file at a Google Cloud Storage URL using `gsutil du`.
+    """    Returns the size in bytes of a file at a Google Cloud Storage URL using
+    `gsutil du`.
 
-    Returns 0 if the command fails or output is empty.
+    This function executes the `gsutil du` command to get the size of the
+    file at the specified URL. If the command fails or the output is empty,
+    it returns 0.
+
+    Args:
+        url (str): The Google Cloud Storage URL of the file.
+
+    Returns:
+        int: The size of the file in bytes.
     """
     output = subprocess.check_output(["gsutil", "du", url], shell=False, encoding="utf-8")
     return int(output.split()[0]) if output else 0
 
 
 def url_getsize(url="https://ultralytics.com/images/bus.jpg"):
-    """Returns the size in bytes of a downloadable file at a given URL; defaults to -1 if not found."""
+    """    Returns the size in bytes of a downloadable file at a given URL;
+    defaults to -1 if not found.
+
+    Args:
+        url (str): The URL of the file to get the size from. Defaults to
+            "https://ultralytics.com/images/bus.jpg".
+
+    Returns:
+        int: The size in bytes of the file at the given URL, or -1 if not found.
+    """
     response = requests.head(url, allow_redirects=True)
     return int(response.headers.get("content-length", -1))
 
 
 def curl_download(url, filename, *, silent: bool = False) -> bool:
-    """Download a file from a url to a filename using curl."""
+    """    Download a file from a URL to a specified filename using curl.
+
+    Args:
+        url (str): The URL from which the file will be downloaded.
+        filename (str): The name of the file to which the downloaded content will be saved.
+        silent (bool?): If True, suppresses the progress meter and error messages. Defaults to
+            False.
+
+    Returns:
+        bool: True if the download was successful, False otherwise.
+    """
     silent_option = "sS" if silent else ""  # silent
     proc = subprocess.run(
         [
@@ -58,10 +96,23 @@ def curl_download(url, filename, *, silent: bool = False) -> bool:
 
 
 def safe_download(file, url, url2=None, min_bytes=1e0, error_msg=""):
-    """
-    Downloads a file from a URL (or alternate URL) to a specified path if file is above a minimum size.
+    """    Downloads a file from a URL (or alternate URL) to a specified path if
+    the file size is above a minimum threshold.
 
-    Removes incomplete downloads.
+    This function downloads a file from the specified URL to the provided
+    file path. If the downloaded file is incomplete or below the minimum
+    size threshold, it removes the incomplete download and retries the
+    download from an alternate URL if provided.
+
+    Args:
+        file (str): The path where the downloaded file will be saved.
+        url (str): The primary URL from which the file will be downloaded.
+        url2 (str?): An alternate URL to download the file from if the primary download
+            fails. Defaults to None.
+        min_bytes (float?): The minimum size threshold in bytes for the downloaded file to be
+            considered valid. Defaults to 1e0.
+        error_msg (str?): Custom error message to display when the downloaded file is incomplete
+            or below the minimum size. Defaults to "".
     """
     from utils.general import LOGGER
 
@@ -86,12 +137,40 @@ def safe_download(file, url, url2=None, min_bytes=1e0, error_msg=""):
 
 
 def attempt_download(file, repo="ultralytics/yolov5", release="v7.0"):
-    """Downloads a file from GitHub release assets or via direct URL if not found locally, supporting backup
-    versions.
+    """    Downloads a file from GitHub release assets or via direct URL if not
+    found locally, supporting backup versions.
+
+    This function attempts to download a file from GitHub release assets or
+    via a direct URL if the file is not found locally. It supports backup
+    versions in case the specified file is not available.
+
+    Args:
+        file (str): The file to be downloaded.
+        repo (str): The GitHub repository to download from. Defaults to
+            "ultralytics/yolov5".
+        release (str): The release version to download from. Defaults to "v7.0".
+
+    Returns:
+        str: The path to the downloaded file.
     """
     from utils.general import LOGGER
 
     def github_assets(repository, version="latest"):
+        """Return GitHub repository tag and assets based on the specified version.
+
+        This function takes a GitHub repository name and an optional version
+        parameter to fetch the repository tag and associated assets from the
+        GitHub API.
+
+        Args:
+            repository (str): The name of the GitHub repository.
+            version (str?): The version or tag of the repository. Defaults to "latest".
+
+        Returns:
+            tuple: A tuple containing the repository tag (str) and a list of asset names
+                (list of str).
+        """
+
         # Return GitHub repo tag (i.e. 'v7.0') and assets (i.e. ['yolov5s.pt', 'yolov5m.pt', ...])
         if version != "latest":
             version = f"tags/{version}"  # i.e. tags/v7.0
