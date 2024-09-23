@@ -76,7 +76,9 @@ GIT_INFO = check_git_info()
 
 
 def train(opt, device):
-    """Trains a YOLOv5 model, managing datasets, model optimization, logging, and saving checkpoints."""
+    """    Trains a YOLOv5 model, managing datasets, model optimization, logging,
+    and saving checkpoints.
+    """
     init_seeds(opt.seed + 1 + RANK, deterministic=True)
     save_dir, data, bs, epochs, nw, imgsz, pretrained = (
         opt.save_dir,
@@ -307,8 +309,18 @@ def train(opt, device):
 
 
 def parse_opt(known=False):
-    """Parses command line arguments for YOLOv5 training including model path, dataset, epochs, and more, returning
-    parsed arguments.
+    """    Parses command line arguments for YOLOv5 training including model path,
+    dataset, epochs, and more, returning
+    parsed arguments.  This function creates an ArgumentParser object and
+    adds various command line arguments related to YOLOv5 training, such as
+    model path, dataset, epochs, batch size, image size, etc. It then parses
+    the arguments and returns the parsed arguments.
+
+    Args:
+        known (bool?): Whether to parse known arguments only. Defaults to False.
+
+    Returns:
+        argparse.Namespace: Parsed command line arguments.
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=str, default="yolov5s-cls.pt", help="initial weights path")
@@ -337,7 +349,12 @@ def parse_opt(known=False):
 
 
 def main(opt):
-    """Executes YOLOv5 training with given options, handling device setup and DDP mode; includes pre-training checks."""
+    """    Executes YOLOv5 training with given options, handling device setup and
+    DDP mode; includes pre-training checks.
+
+    Args:
+        opt (argparse.Namespace): Options for YOLOv5 training.
+    """
     if RANK in {-1, 0}:
         print_args(vars(opt))
         check_git_status()
@@ -361,10 +378,19 @@ def main(opt):
 
 
 def run(**kwargs):
-    """
-    Executes YOLOv5 model training or inference with specified parameters, returning updated options.
+    """    Executes YOLOv5 model training or inference with specified parameters,
+    returning updated options.
 
-    Example: from yolov5 import classify; classify.train.run(data=mnist, imgsz=320, model='yolov5m')
+    This function executes the YOLOv5 model training or inference with the
+    specified parameters. It first parses the options, then updates the
+    options with the provided keyword arguments. Finally, it runs the main
+    function with the updated options.
+
+    Args:
+        **kwargs: Keyword arguments to update the options.
+
+    Returns:
+        Namespace: Updated options after running the YOLOv5 model.
     """
     opt = parse_opt(True)
     for k, v in kwargs.items():
